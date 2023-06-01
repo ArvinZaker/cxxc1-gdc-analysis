@@ -76,6 +76,7 @@ sdb$label <- apply(sdb, 1,
 # ymax <- .5
 ymin <- -1
 ymax <- 0
+legsize <- 8
 
 set.seed(123)
 p <- ggplot(newMutDb, aes(x = pos,y = num, fill = type, color = type, group = type)) + # size = impact, ,  , 
@@ -88,20 +89,14 @@ p <- ggplot(newMutDb, aes(x = pos,y = num, fill = type, color = type, group = ty
     geom_hline(yintercept = 1, linewidth = 0.5, linetype = "dashed", color = "grey80") +
     geom_hline(yintercept = 2, linewidth = 0.5, linetype = "dashed", color = "grey80") +
     geom_hline(yintercept = 3, linewidth = 0.5, linetype = "dashed", color = "grey80") +
-    #geom_hline(yintercept = 4, linewidth = 0.5, linetype = "dashed", color = "grey80") +
-    #geom_point(alpha = 0.85, size = 2) +
     # https://ggrepel.slowkow.com/articles/examples.html
     # annotations
     geom_text_repel(
         data = sdb, 
         mapping = aes(label = label),
-        #ylim = c(3.5, 4.5),
+        size = legsize / 2,
         ylim = c(3.5, 4),
-        #alpha = .5,
         alpha = .75,
-        #color = "red", 
-        #color = "#8b0000",
-        #color = "#bebada",
         color = "#373640",
         size = 2.5, # 2
         angle = 0,
@@ -112,45 +107,41 @@ p <- ggplot(newMutDb, aes(x = pos,y = num, fill = type, color = type, group = ty
                    # the lines that go to dots
     geom_segment(
         mapping = aes(xend = pos, yend = -.5), 
-        #color = "grey50",
-        #size = .5, alpha = .85
         color = "black",
         size = .25, alpha = .85
     ) +
-
-                   # dots
     geom_point(alpha = 1, size = 2) +
     # baseline of the prot
     geom_hline(yintercept = (ymax + ymin) / 2, linewidth = 3, color = "grey60") +
     geom_rect(xmin = 28, xmax = 76,
               ymin = ymin, ymax = ymax,
               color = NA, 
-              #fill = "#1CD0BB"
               fill = "#d95f02"
               ) + # PHD 3"green" "#C4A484"
     geom_text(x = (28 + 76) / 2,
               y = (ymin + ymax) / 2,
               color = "white",
+              size = legsize,
               label = "PHD") +
     geom_rect(xmin = 163, xmax = 208,
               ymin = ymin, ymax = ymax,
-              color = NA, 
-              #fill = "blue"
+              color = NA,
               fill = "#1b9e77"
               ) + # ZF , zinc finger domain
     geom_text(x = (163 + 208) / 2,
               y = (ymin + ymax) / 2,
               color = "white",
+              size = legsize,
               label = "ZF") +
     geom_rect(xmin = 400, xmax = 636,
               ymin = ymin, ymax = ymax,
               color = NA, 
-              #fill = "purple"
               fill = "#7570b3"
               ) + #zf-CpG_bind_C: CpG binding protein zinc finger C terminal domain
     geom_text(x = (400 + 636) / 2,
               y = (ymin + ymax) / 2,
               color = "white",
+              size = legsize,
               label = "ZF-CpG binding") +
     scale_fill_manual(values = cols, name = "Mutation types") +
     scale_color_manual(values = cols, name = "Mutation types") +
@@ -162,20 +153,22 @@ p <- ggplot(newMutDb, aes(x = pos,y = num, fill = type, color = type, group = ty
         ) +
     scale_y_continuous(
         #limits = c(-1, 5),
-        #breaks = c(seq(1, 4, 1)),
-        #labels = c(1:4),
-        limits = c(-1, 4),
+        #limits = c(-1, 4),
+        #limits = c(-1, 4),
+        limits = c(-1, 5),
         #breaks = c(seq(1, 4, 1)),
         breaks = 1:3,
         labels = 1:3,
         expand = c(0, 0),
         name = "Number of Mutations"
         ) +
-                   guides(fill = "none") +
+    guides(fill = "none") +
     theme(
         legend.position = "top",
         legend.direction = "horizontal",
     )
-pdf("./figures/lolipop.pdf", width = 20, height = 3)
+#pdf("./lolipop.pdf", width = 20, height = 3)
+#pdf("./figures/lolipop.pdf", width = 20, height = 20/3.5)
+pdf("./figures/lolipop.pdf", width = 20, height = 20/4)
 plot(p)
 dev.off()

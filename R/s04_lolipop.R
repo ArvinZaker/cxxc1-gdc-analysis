@@ -176,6 +176,6 @@ p <- ggplot(newMutDb, aes(x = pos,y = num, fill = type, color = type, group = ty
         legend.position = "top",
         legend.direction = "horizontal",
     )
-pdf("./lolipop.pdf", width = 20, height = 3)
+pdf("./figures/lolipop.pdf", width = 20, height = 3)
 plot(p)
 dev.off()

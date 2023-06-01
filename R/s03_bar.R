@@ -67,7 +67,7 @@ plotdb$mutType <- factor(plotdb$mutType, levels = mutTypeOrder)
 plotdb <- plotdb[plotdb$freq > 0, ]
 
 
-pdf("./bar.pdf", height = 4, width = 8)
+pdf("./figures/bar.pdf", height = 4, width = 8)
 plot(freqBarChart(plotdb) + scale_fill_manual(values = cols, name = "Mutation types"))
 # scale_fill_nejm("default", name = "Mutation types"))
 

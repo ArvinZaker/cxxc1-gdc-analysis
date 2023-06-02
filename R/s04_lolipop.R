@@ -152,23 +152,23 @@ p <- ggplot(newMutDb, aes(x = pos,y = num, fill = type, color = type, group = ty
         breaks = c(seq(0, 650, 50), 28, 76),
         ) +
     scale_y_continuous(
-        #limits = c(-1, 5),
-        #limits = c(-1, 4),
         #limits = c(-1, 4),
         limits = c(-1, 5),
-        #breaks = c(seq(1, 4, 1)),
         breaks = 1:3,
         labels = 1:3,
         expand = c(0, 0),
         name = "Number of Mutations"
         ) +
     guides(fill = "none") +
+    xlab("") +
     theme(
         legend.position = "top",
         legend.direction = "horizontal",
+        axis.text.x = element_text(size = legsize * 2),
+        axis.text.y = element_text(size = legsize * 2),
+        axis.title.x = element_text(size = legsize * 2.5),
+        axis.title.y = element_text(size = legsize * 2.5),
     )
-#pdf("./lolipop.pdf", width = 20, height = 3)
-#pdf("./figures/lolipop.pdf", width = 20, height = 20/3.5)
 pdf("./figures/lolipop.pdf", width = 20, height = 20/4)
 plot(p)
 dev.off()

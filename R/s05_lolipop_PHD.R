@@ -2,10 +2,10 @@ library(ggplot2)
 library(viridis)
 library(ggsci)
 library(ggrepel)
-# phdStart <- 28
-# phdEnd <- 76
-phdStart <- 60
-phdEnd <- 110
+phdStart <- 28
+phdEnd <- 76
+# phdStart <- 60
+# phdEnd <- 110
 cols <- c(
   "#BC3C29FF", "#E18727FF", "#0072B5FF", "#20854EFF", "#7876B1FF",
   "#6F99ADFF", "#FFDC91FF"
@@ -16,6 +16,7 @@ mutdb$type <- mutdb$Variant_Classification
 mutdb$type <- gsub("Frame_Shift_Del", "Frameshift Deletion", mutdb$type)
 mutdb$type <- gsub("In_Frame_Ins", "InFrame Insertion", mutdb$type)
 mutdb$type <- gsub("_", " ", mutdb$type)
+
 
 
 
@@ -52,13 +53,28 @@ mutdb$type <- factor(mutdb$type, levels = mutTypeOrder)
 newMutDb <- as.data.frame(table(mutdb$pos, mutdb$type, mutdb$IMPACT, mutdb$Amino_acids))
 colnames(newMutDb) <- c("pos", "type", "impact", "AA", "num")
 newMutDb <- newMutDb[newMutDb$num > 0, ]
-print(head(newMutDb))
 newMutDb$pos <- as.numeric(as.character(newMutDb$pos))
 newMutDb$num <- as.numeric(newMutDb$num)
+newMutDb$AA <- as.character(newMutDb$AA)
+### NOTE added mutations as recommended by Sabrina:
+v <- c(63, "Missense Mutation", "MODERATE", "K/N", 1)
+newMutDb <- rbind(newMutDb, v)
+### NOTE: removed mutations as recommended by Sabrina:
+newMutDb <- newMutDb[!(newMutDb$AA == "R/Q" & newMutDb$pos == 56), ]
+newMutDb <- newMutDb[!(newMutDb$AA == "R" & newMutDb$pos == 56), ]
+newMutDb <- newMutDb[!(newMutDb$AA == "W/*" & newMutDb$pos == 68), ]
+
 # newMutDb$impact <- factor(newMutDb$impact, levels = c("LOW", "MODERATE", "HIGH"))
 newMutDb$impact <- factor(newMutDb$impact, levels = c("HIGH", "MODERATE", "LOW"))
-newMutDb$type <- factor(newMutDb$type, levels = mutTypeOrder)
-length(levels(newMutDb$type))
+newMutDb$pos <- as.numeric(newMutDb$pos)
+newMutDb$num <- as.numeric(newMutDb$num)
+# newMutDb$type <- factor(newMutDb$type, levels = mutTypeOrder)
+newMutDb$type <- factor(newMutDb$type,
+  levels = c(
+    "Missense Mutation", "InFrame Insertion", "Silent", "Splice Site",
+    "Frameshift Deletion", "Nonsense Mutation", "Translation Start Site"
+  )
+)
 phdDomRows <- newMutDb$pos >= phdStart & newMutDb$pos <= phdEnd
 # sdb <- newMutDb[newMutDb$impact == "HIGH", ]
 sdb <- newMutDb[phdDomRows, ]
@@ -79,6 +95,8 @@ newMutDb <- newMutDb[phdDomRows, ]
 ymin <- -1
 ymax <- 0
 legsize <- 8
+
+
 
 set.seed(123)
 p <- ggplot(newMutDb, aes(x = pos, y = num, fill = type, color = type, group = type)) + # size = impact, ,  ,

@@ -2,8 +2,6 @@ library(ggplot2)
 library(viridis)
 library(ggsci)
 library(ggrepel)
-phdStart <- 28
-phdEnd <- 76
 library(readxl)
 # add cosmid db data
 cosmicDB <- as.data.frame(read_xlsx("./data/cosmic-db.xlsx"))
@@ -13,9 +11,11 @@ colnames(cosmicDB) <- c(
 )
 cosmicDB$pos <- as.numeric(cosmicDB$pos)
 cosmicDB$num <- as.numeric(cosmicDB$num)
+head(cosmicDB)
+cosmicDB$AAsub
 cosmicDB$AA <- gsub("p\\.", "", cosmicDB$AAsub)
 cosmicDB$AA <- gsub("[0-9]", "", cosmicDB$AA)
-cosmicDB$AA <- gsub("\\*", "", cosmicDB$AA)
+# cosmicDB$AA <- gsub("\\*", "", cosmicDB$AA)
 cosmicDB$AA <- gsub("\\=", "", cosmicDB$AA)
 cosmicDB <- cosmicDB[cosmicDB$AA != "MODERATE", ]
 cosmicDB$AA <- sapply(cosmicDB$AA, function(x) {
@@ -30,14 +30,25 @@ cosmicDB$type <- gsub("Substitution - Missense", "Missense Mutation", cosmicDB$t
 cosmicDB$type <- gsub("Substitution - Nonsense", "Nonsense Mutation", cosmicDB$type)
 
 cosmicDB <- cosmicDB[, c("pos", "type", "AA", "num")]
-# phdStart <- 60
-# phdEnd <- 110
+# cosmicDB$num <- 1
+# add GDC data
 cols <- c(
   "#BC3C29FF", "#E18727FF", "#0072B5FF", "#20854EFF", "#7876B1FF",
   "#6F99ADFF", "#FFDC91FF"
 )
-
 newMutDb <- cosmicDB
+### NOTE added mutations as recommended by Sabrina:
+# v <- c(63, "Missense Mutation", "MODERATE", "K/N", 1)
+# newMutDb <- rbind(newMutDb, v)
+### NOTE: removed mutations as recommended by Sabrina:
+newMutDb <- newMutDb[!(newMutDb$AA == "R/Q" & newMutDb$pos == 56), ]
+newMutDb <- newMutDb[!(newMutDb$AA == "R" & newMutDb$pos == 56), ]
+newMutDb <- newMutDb[!(newMutDb$AA == "W/*" & newMutDb$pos == 68), ]
+
+# newMutDb$impact <- factor(newMutDb$impact, levels = c("LOW", "MODERATE", "HIGH"))
+# newMutDb$impact <- factor(newMutDb$impact, levels = c("HIGH", "MODERATE", "LOW"))
+newMutDb$pos <- as.numeric(newMutDb$pos)
+newMutDb$num <- as.numeric(newMutDb$num)
 # newMutDb$type <- factor(newMutDb$type, levels = mutTypeOrder)
 newMutDb$type <- factor(newMutDb$type,
   levels = c(
@@ -45,10 +56,16 @@ newMutDb$type <- factor(newMutDb$type,
     "Frameshift Deletion", "Nonsense Mutation", "Translation Start Site"
   )
 )
+
 newMutDb <- newMutDb[newMutDb$type != "Silent", ]
-phdDomRows <- newMutDb$pos >= phdStart & newMutDb$pos <= phdEnd
+
+#
+# length(levels(newMutDb$type))
+#
+phdDomRows <- newMutDb$pos >= 28 & newMutDb$pos <= 76
+table(phdDomRows)
 # sdb <- newMutDb[newMutDb$impact == "HIGH", ]
-sdb <- newMutDb[phdDomRows, ]
+sdb <- newMutDb[phdDomRows, ] # | newMutDb$impact == "HIGH", ]
 sdb$label <- apply(
   sdb, 1,
   function(x) {
@@ -61,44 +78,42 @@ sdb$label <- apply(
     return(v)
   }
 )
+# newMutDb$num <- newMutDb$num + 0.5
+# newMutDb$num <- newMutDb$num * ifelse(phdDomRows, 1, -1)
 
-newMutDb <- newMutDb[phdDomRows, ]
+# ymin <- -.5
+# ymax <- .5
 ymin <- -1
 ymax <- 0
 legsize <- 8
 
-
-
-set.seed(123)
-p <- ggplot(newMutDb, aes(x = pos, y = num, fill = type, color = type, group = type)) + # size = impact, ,  ,
+p <- ggplot(newMutDb, aes(x = as.numeric(pos), y = as.numeric(num), fill = type, color = type, group = type)) + # size = impact, ,  ,
   annotate("rect",
-    xmin = phdStart, xmax = phdEnd,
-    ymin = 0, ymax = 2,
+    xmin = 28, xmax = 76,
+    ymin = 0, ymax = 4,
     alpha = 1, fill = "#F9F1E4"
   ) +
   # 1-3 bg dashed lines
   geom_hline(yintercept = 1, linewidth = 0.5, linetype = "dashed", color = "grey80") +
-  # geom_hline(yintercept = 2, linewidth = 0.5, linetype = "dashed", color = "grey80") +
-  # geom_hline(yintercept = 3, linewidth = 0.5, linetype = "dashed", color = "grey80") +
+  geom_hline(yintercept = 2, linewidth = 0.5, linetype = "dashed", color = "grey80") +
+  geom_hline(yintercept = 3, linewidth = 0.5, linetype = "dashed", color = "grey80") +
+  geom_hline(yintercept = 4, linewidth = 0.5, linetype = "dashed", color = "grey80") +
+  geom_hline(yintercept = 5, linewidth = 0.5, linetype = "dashed", color = "grey80") +
   # https://ggrepel.slowkow.com/articles/examples.html
   # annotations
   geom_text_repel(
     data = sdb,
     mapping = aes(label = label),
     size = legsize / 2,
-    # size = legsize / 1.5,
-    # ylim = c(2, 2.5),
-    # ylim = c(1.5, 3),
-    ylim = c(1.5, 5),
+    # ylim = c(3.5, 5),
+    ylim = c(5, 6),
     alpha = .75,
     color = "#373640",
-    size = 2.5,
+    size = 2.5, # 2
     angle = 0,
-    nudge_y = 2,
-    nudge_x = -5,
-    # nudge_y = 2,
+    nudge_y = 0,
     segment.curvature = -1e-20,
-    fontface = "bold",
+    # fontface = "bold",
   ) +
   # the lines that go to dots
   geom_segment(
@@ -106,36 +121,61 @@ p <- ggplot(newMutDb, aes(x = pos, y = num, fill = type, color = type, group = t
     color = "black",
     size = .25, alpha = .85
   ) +
-  geom_point(alpha = 1, size = 3) +
+  geom_point(alpha = 1, size = 2) +
   # baseline of the prot
   geom_hline(yintercept = (ymax + ymin) / 2, linewidth = 3, color = "grey60") +
   geom_rect(
-    xmin = phdStart, xmax = phdEnd,
+    xmin = 28, xmax = 76,
     ymin = ymin, ymax = ymax,
     color = NA,
     fill = "#d95f02"
   ) + # PHD 3"green" "#C4A484"
   geom_text(
-    x = (phdStart + phdEnd) / 2,
+    x = (28 + 76) / 2,
     y = (ymin + ymax) / 2,
     color = "white",
     size = legsize,
     label = "PHD"
+  ) +
+  geom_rect(
+    xmin = 163, xmax = 208,
+    ymin = ymin, ymax = ymax,
+    color = NA,
+    fill = "#1b9e77"
+  ) + # ZF , zinc finger domain
+  geom_text(
+    x = (163 + 208) / 2,
+    y = (ymin + ymax) / 2,
+    color = "white",
+    size = legsize,
+    label = "ZF"
+  ) +
+  geom_rect(
+    xmin = 400, xmax = 636,
+    ymin = ymin, ymax = ymax,
+    color = NA,
+    fill = "#7570b3"
+  ) + # zf-CpG_bind_C: CpG binding protein zinc finger C terminal domain
+  geom_text(
+    x = (400 + 636) / 2,
+    y = (ymin + ymax) / 2,
+    color = "white",
+    size = legsize,
+    label = "ZF-CpG binding"
   ) +
   scale_fill_manual(values = cols, name = "Mutation types") +
   scale_color_manual(values = cols, name = "Mutation types") +
   theme_classic() +
   scale_x_continuous(
     expand = c(0.01, 0.01),
-    limits = c(signif(phdStart - 10, 1), signif(phdEnd + 10, 2)),
-    breaks = c(seq(signif(phdStart - 10, 1), signif(phdEnd + 10, 2), 10), phdStart, phdStart),
+    limits = c(0, 656),
+    breaks = c(seq(0, 650, 50), 28, 76),
   ) +
   scale_y_continuous(
-    # limits = c(-1, 3),
     # limits = c(-1, 4),
-    limits = c(-1, 5.25),
-    breaks = 1:2,
-    labels = 1:2,
+    limits = c(-1, 6),
+    breaks = 1:5,
+    labels = 1:5,
     expand = c(0, 0),
     name = "Number of Mutations"
   ) +
@@ -144,13 +184,11 @@ p <- ggplot(newMutDb, aes(x = pos, y = num, fill = type, color = type, group = t
   theme(
     legend.position = "top",
     legend.direction = "horizontal",
-    legend.text = element_text(size = legsize * 2),
-    legend.title = element_text(size = legsize * 2),
     axis.text.x = element_text(size = legsize * 2),
     axis.text.y = element_text(size = legsize * 2),
     axis.title.x = element_text(size = legsize * 2.5),
     axis.title.y = element_text(size = legsize * 2.5),
   )
-pdf("./figures/cosmic-phd.pdf", width = 10, height = 4)
+pdf("./figures/cosmic.pdf", width = 20, height = 20 / 4)
 plot(p)
 dev.off()

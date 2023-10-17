@@ -3,29 +3,29 @@ library(viridis)
 library(ggsci)
 library(ggrepel)
 cols <- c(
-    "#BC3C29FF", "#E18727FF", "#0072B5FF", "#20854EFF", "#7876B1FF",
-    "#6F99ADFF", "#FFDC91FF"
+  "#BC3C29FF", "#E18727FF", "#0072B5FF", "#20854EFF", "#7876B1FF",
+  "#6F99ADFF", "#FFDC91FF"
 )
 freqBarChart <- function(plotdb) {
-    p <- ggplot(plotdb, aes(fill = mutType, y = freq, x = study)) +
-        # geom_bar(position = "stack", stat = "identity", width = 0.85) +
-        geom_bar(position = "stack", stat = "identity", width = 0.8) +
-        theme_classic() +
-        # coord_flip() +
-        xlab("") +
-        scale_y_continuous(
-            limits = c(0, 10),
-            expand = c(0, 0),
-            breaks = seq(0, 10, 2),
-            name = "Mutation Frequency (%)"
-        ) +
-        theme(
-            legend.position = c(0.8, 0.5),
-            # # legend.direction = "vertical",
-            text = element_text(color = "black"),
-            axis.text.x = element_text(angle = 45, color = "black", hjust = 1, vjust = 1)
-        )
-    return(p)
+  p <- ggplot(plotdb, aes(fill = mutType, y = freq, x = study)) +
+    # geom_bar(position = "stack", stat = "identity", width = 0.85) +
+    geom_bar(position = "stack", stat = "identity", width = 0.8) +
+    theme_classic() +
+    # coord_flip() +
+    xlab("") +
+    scale_y_continuous(
+      limits = c(0, 10),
+      expand = c(0, 0),
+      breaks = seq(0, 10, 2),
+      name = "Mutation Frequency (%)"
+    ) +
+    theme(
+      legend.position = c(0.8, 0.5),
+      # # legend.direction = "vertical",
+      text = element_text(color = "black"),
+      axis.text.x = element_text(angle = 45, color = "black", hjust = 1, vjust = 1)
+    )
+  return(p)
 }
 mutdb <- readRDS("./results/mutdb.rds")
 mutdb$type <- mutdb$Variant_Classification
@@ -44,16 +44,16 @@ mutTypeFreqs <- list() # <- setNames(rep(0, length(mutTypes)), mutTypes)
 
 plotdb <- data.frame()
 for (i in seq_len(nrow(clindb))) {
-    curStudy <- clindb$study[i]
-    for (curMutType in mutTypes) {
-        submutdb <- mutdb[mutdb$study == curStudy & mutdb$type == curMutType, ]
-        freq <- nrow(submutdb) / clindb$size[i] * 100
-        if (freq == 0) next()
-        t <- data.frame(study = curStudy, mutType = curMutType, freq = freq)
-        plotdb <- rbind(t, plotdb)
-        clindb$cumFreq[i] <- clindb$cumFreq[i] + freq
-        mutTypeFreqs[[curMutType]] <- append(freq, mutTypeFreqs[[curMutType]])
-    }
+  curStudy <- clindb$study[i]
+  for (curMutType in mutTypes) {
+    submutdb <- mutdb[mutdb$study == curStudy & mutdb$type == curMutType, ]
+    freq <- nrow(submutdb) / clindb$size[i] * 100
+    if (freq == 0) next()
+    t <- data.frame(study = curStudy, mutType = curMutType, freq = freq)
+    plotdb <- rbind(t, plotdb)
+    clindb$cumFreq[i] <- clindb$cumFreq[i] + freq
+    mutTypeFreqs[[curMutType]] <- append(freq, mutTypeFreqs[[curMutType]])
+  }
 }
 
 meanMutTypeFreqs <- sapply(mutTypeFreqs, mean)
